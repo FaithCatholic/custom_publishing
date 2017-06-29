@@ -53,7 +53,7 @@ class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('Email subject'),
       '#type' => 'textfield',
       '#default_value' => $config->get('notify_subject') ? $config->get('notify_subject') : '',
-      '#description' => $this->t('Specify the email subject. Allowed tokens: [[title]], [[link]], [[created]], [[sitename]]'),
+      '#description' => $this->t('Specify the email subject. Allowed tokens: [[title]], [[link]], [[created]], [[type]], [[sitename]]'),
       '#required' => FALSE,
     );
 

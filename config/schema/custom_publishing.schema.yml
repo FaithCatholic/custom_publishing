@@ -1,0 +1,16 @@
+custom_publishing.settings:
+  type: config_object
+  label: 'Custom publishing settings'
+  mapping:
+    notify:
+      type: string
+      label: 'Enable notification email'
+    notify_address:
+      type: string
+      label: 'Notification email address'
+    notify_subject:
+      type: string
+      label: 'Notification email subject'
+    notify_message:
+      type: string
+      label: 'Notification email message body'

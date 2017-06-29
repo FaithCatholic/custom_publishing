@@ -1,0 +1,79 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Mail\MailFormatHelper;
+use Drupal\taxonomy\Entity\Vocabulary;
+
+/**
+ * Unpublish new nodes authored by anonymous users.
+ * @param  EntityInterface $node
+ */
+function custom_publishing_node_presave(EntityInterface $node) {
+  $account = \Drupal::currentUser();
+  if ($account->isAnonymous()) {
+    // Set status to unpublished.
+    $node->setPublished(FALSE);
+  }
+}
+
+/**
+ * Send email notification upon new nodes authored by anonymous users.
+ * @param  EntityInterface $node
+ */
+function custom_publishing_node_insert(EntityInterface $node) {
+  $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
+  $account = \Drupal::currentUser();
+  if ($config->get('notify') && $account->isAnonymous()) {
+    // Set the recipient address.
+    $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
+    $site = \Drupal::service('config.factory')->get('system.site');
+    $to = $config->get('notify_address') ? $config->get('notify_address') : $site->get('mail');
+    // Parameters.
+    $params = [];
+    $params['node'] = $node;
+    $lang = $node->langcode->value;
+    // Send the email.
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $result = $mailManager->mail('custom_publishing', 'anonymous_node_insert', $to, $lang, $params, NULL, TRUE);
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function custom_publishing_mail($key, &$message, $params) {
+  // Only hook_mail for anonymous users inserting nodes.
+  if ($key === 'anonymous_node_insert') {
+    $site = \Drupal::service('config.factory')->get('system.site');
+    $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
+    // Grab the node.
+    $node = $params['node'];
+    // Set up the fields.
+    $title = $node->getTitle();
+    $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path.alias_manager')->getAliasByPath('/node/'. $node->id());
+    $type = strtolower(node_get_type_label($node));
+    $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . drupal_get_user_timezone();
+    $sitename = $site->get('name');
+
+    // Set up the subject.
+    if ($subject = $config->get('notify_subject')) {
+      $subject = str_replace("[[title]]", $title, $subject);
+      $subject = str_replace("[[link]]", $link, $subject);
+      $subject = str_replace("[[created]]", $created, $subject);
+      $subject = str_replace("[[sitename]]", $sitename, $subject);
+      $message['subject'] = $subject;
+    } else {
+      $message['subject'] = 'New ' . $type . ' "' . $title . '" was submitted at ' . $sitename;
+    }
+    // Set up the body.
+    if ($body = $config->get('notify_message')) {
+      $body = str_replace("[[title]]", $title, $body);
+      $body = str_replace("[[link]]", $link, $body);
+      $body = str_replace("[[created]]", $created, $body);
+      $body = str_replace("[[sitename]]", $sitename, $body);
+      $message['body'][] = $body;
+    } else {
+      $message['body'][] = "Greetings,\n\n" . 'New ' . $type . ' "' . $title . '" was submitted anonymously at ' . $sitename . ' on ' . $created . ".\n\n" . $link;
+    }
+  }
+}

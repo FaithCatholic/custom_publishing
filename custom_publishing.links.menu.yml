@@ -1,0 +1,5 @@
+custom_publishing.settings:
+  title: 'Custom publishing settings'
+  description: 'Allow anonymous users to create unpublished content.'
+  route_name: custom_publishing.settings
+  parent: system.admin_config_content

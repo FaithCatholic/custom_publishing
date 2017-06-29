@@ -1,0 +1,7 @@
+custom_publishing.settings:
+  path: '/admin/config/content/custom-publishing'
+  defaults:
+    _form: '\Drupal\custom_publishing\Form\SettingsForm'
+    _title: 'Custom publishing settings'
+  requirements:
+    _permission: 'administer site configuration'

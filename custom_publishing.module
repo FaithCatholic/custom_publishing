@@ -54,23 +54,23 @@ function custom_publishing_mail($key, &$message, $params) {
     $type = strtolower(node_get_type_label($node));
     $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . drupal_get_user_timezone();
     $sitename = $site->get('name');
-
-    // Set up the subject.
+    // Token replacements.
+    $tokens = array(
+      '[[title]]' => $title,
+      '[[link]]' => $link,
+      '[[created]]' => $created,
+      '[[sitename]]' => $sitename,
+    );
+    // Assign the subject.
     if ($subject = $config->get('notify_subject')) {
-      $subject = str_replace("[[title]]", $title, $subject);
-      $subject = str_replace("[[link]]", $link, $subject);
-      $subject = str_replace("[[created]]", $created, $subject);
-      $subject = str_replace("[[sitename]]", $sitename, $subject);
+      $subject = strtr($subject, $tokens);
       $message['subject'] = $subject;
     } else {
       $message['subject'] = 'New ' . $type . ' "' . $title . '" was submitted at ' . $sitename;
     }
-    // Set up the body.
+    // Assign the body.
     if ($body = $config->get('notify_message')) {
-      $body = str_replace("[[title]]", $title, $body);
-      $body = str_replace("[[link]]", $link, $body);
-      $body = str_replace("[[created]]", $created, $body);
-      $body = str_replace("[[sitename]]", $sitename, $body);
+      $body = strtr($body, $tokens);
       $message['body'][] = $body;
     } else {
       $message['body'][] = "Greetings,\n\n" . 'New ' . $type . ' "' . $title . '" was submitted anonymously at ' . $sitename . ' on ' . $created . ".\n\n" . $link;

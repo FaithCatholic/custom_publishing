@@ -59,6 +59,7 @@ function custom_publishing_mail($key, &$message, $params) {
       '[[title]]' => $title,
       '[[link]]' => $link,
       '[[created]]' => $created,
+      '[[type]]' => $type,
       '[[sitename]]' => $sitename,
     );
     // Assign the subject.

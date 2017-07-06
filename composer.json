@@ -1,5 +1,5 @@
 {
-  "name": "drupal/custom_publishing",
+  "name": "faithcatholic/custom_publishing",
   "type": "drupal-module",
   "description": "Lets anonymous users create unpublished content.",
   "keywords": ["Drupal"],

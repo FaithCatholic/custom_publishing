@@ -1,3 +1,5 @@
+roles: {}
+types: {}
 notify: ''
 notify_address: ''
 notify_subject: ''

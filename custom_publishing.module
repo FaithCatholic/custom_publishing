@@ -3,6 +3,7 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\user\Entity\User;
 
 /**
  * Unpublish new nodes authored by anonymous users.
@@ -10,9 +11,14 @@ use Drupal\taxonomy\Entity\Vocabulary;
  */
 function custom_publishing_node_presave(EntityInterface $node) {
   $account = \Drupal::currentUser();
-  if ($account->isAnonymous()) {
-    // Set status to unpublished.
+  $user = User::load($account->id());
+  $user_roles = $user->getRoles();
+
+  $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
+
+  if (array_intersect($config->get('roles'), $user_roles)) {
     $node->setPublished(FALSE);
+    drupal_set_message(t($node->type->entity->label() .' has been submitted for approval.'));
   }
 }
 

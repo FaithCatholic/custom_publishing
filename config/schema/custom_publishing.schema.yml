@@ -2,6 +2,16 @@ custom_publishing.settings:
   type: config_object
   label: 'Custom publishing settings'
   mapping:
+    roles:
+      type: sequence
+      label: 'Roles'
+      sequence:
+        type: string
+    types:
+      type: sequence
+      label: 'Types'
+      sequence:
+        type: string
     notify:
       type: string
       label: 'Enable notification email'

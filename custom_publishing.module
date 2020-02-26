@@ -16,7 +16,7 @@ function custom_publishing_node_presave(EntityInterface $node) {
 
   $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
 
-  if (array_intersect($config->get('roles'), $user_roles)) {
+  if (array_intersect($config->get('roles'), $user_roles) && in_array($node->bundle(), $config->get('types'))) {
     $node->setPublished(FALSE);
     drupal_set_message(t($node->type->entity->label() .' has been submitted for approval.'));
   }

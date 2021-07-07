@@ -18,7 +18,7 @@ function custom_publishing_node_presave(EntityInterface $node) {
 
   if (array_intersect($config->get('roles'), $user_roles) && in_array($node->bundle(), $config->get('types'))) {
     $node->setPublished(FALSE);
-    drupal_set_message(t($node->type->entity->label() .' has been submitted for approval.'));
+    \Drupal\Core\Messenger\MessengerInterface::addMessage(t($node->type->entity->label() .' has been submitted for approval.'));
   }
 }
 
@@ -58,7 +58,7 @@ function custom_publishing_mail($key, &$message, $params) {
     $title = $node->getTitle();
     $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path.alias_manager')->getAliasByPath('/node/'. $node->id());
     $type = strtolower(node_get_type_label($node));
-    $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . drupal_get_user_timezone();
+    $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . date_default_timezone_get();
     $sitename = $site->get('name');
     // Token replacements.
     $tokens = array(

@@ -18,7 +18,7 @@ function custom_publishing_node_presave(EntityInterface $node) {
 
   if (array_intersect($config->get('roles'), $user_roles) && in_array($node->bundle(), $config->get('types'))) {
     $node->setPublished(FALSE);
-    \Drupal\Core\Messenger\MessengerInterface::addMessage(t($node->type->entity->label() .' has been submitted for approval.'));
+    \Drupal::messenger()->addMessage(t($node->type->entity->label() .' has been submitted for approval.'));
   }
 }
 

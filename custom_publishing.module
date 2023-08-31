@@ -56,7 +56,7 @@ function custom_publishing_mail($key, &$message, $params) {
     $node = $params['node'];
     // Set up the fields.
     $title = $node->getTitle();
-    $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path.alias_manager')->getAliasByPath('/node/'. $node->id());
+    $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path_alias.manager')->getAliasByPath('/node/'. $node->id());
     $type = strtolower(node_get_type_label($node));
     $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . date_default_timezone_get();
     $sitename = $site->get('name');

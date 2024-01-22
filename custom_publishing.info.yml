@@ -1,6 +1,5 @@
 name: Custom publishing
 type: module
 description: Lets anonymous users create unpublished content.
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8 || ^9 || ^10
 package: Custom

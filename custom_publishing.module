@@ -10,15 +10,13 @@ use Drupal\user\Entity\User;
  * @param  EntityInterface $node
  */
 function custom_publishing_node_presave(EntityInterface $node) {
-  $account = \Drupal::currentUser();
-  $user = User::load($account->id());
-  $user_roles = $user->getRoles();
-
-  $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
-
-  if (array_intersect($config->get('roles'), $user_roles) && in_array($node->bundle(), $config->get('types'))) {
+  // Check if the node is created by an anonymous user.
+  if ($node->getOwnerId() == 0) {
+    // Unpublish the node.
     $node->setPublished(FALSE);
-    \Drupal::messenger()->addMessage(t($node->type->entity->label() .' has been submitted for approval.'));
+    
+    // Display a message to the user.
+    \Drupal::messenger()->addMessage(t('The ' . $node->type->entity->label() . ' has been submitted for approval.'));
   }
 }
 

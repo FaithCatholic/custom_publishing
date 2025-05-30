@@ -13,8 +13,7 @@ function custom_publishing_node_presave(EntityInterface $node) {
   // Check if the node is created by an anonymous user.
   if ($node->getOwnerId() == 0) {
     // Unpublish the node.
-    $node->setPublished(FALSE);
-    
+    $node->setUnpublished();
     // Display a message to the user.
     \Drupal::messenger()->addMessage(t('The ' . $node->type->entity->label() . ' has been submitted for approval.'));
   }

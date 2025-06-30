@@ -1,21 +1,20 @@
 <?php
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Mail\MailFormatHelper;
-use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\user\Entity\User;
 
 /**
  * Unpublish new nodes authored by anonymous users.
  * @param  EntityInterface $node
  */
 function custom_publishing_node_presave(EntityInterface $node) {
-  // Check if the node is created by an anonymous user.
-  if ($node->getOwnerId() == 0) {
-    // Unpublish the node.
+  $account = \Drupal::currentUser();
+  $user_roles = $account->getRoles();
+
+  $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
+
+  if (array_intersect($config->get('roles'), $user_roles) && in_array($node->bundle(), $config->get('types'))) {
     $node->setUnpublished();
-    // Display a message to the user.
-    \Drupal::messenger()->addMessage(t('The ' . $node->type->entity->label() . ' has been submitted for approval.'));
+    \Drupal::messenger()->addMessage(t($node->type->entity->label() . ' has been submitted for approval.'));
   }
 }
 
@@ -53,7 +52,7 @@ function custom_publishing_mail($key, &$message, $params) {
     $node = $params['node'];
     // Set up the fields.
     $title = $node->getTitle();
-    $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path_alias.manager')->getAliasByPath('/node/'. $node->id());
+    $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path_alias.manager')->getAliasByPath('/node/' . $node->id());
     $type = strtolower(node_get_type_label($node));
     $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . date_default_timezone_get();
     $sitename = $site->get('name');

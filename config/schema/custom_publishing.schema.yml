@@ -24,3 +24,15 @@ custom_publishing.settings:
     notify_message:
       type: string
       label: 'Notification email message body'
+    confirm_email_types:
+      type: string
+      label: 'Confirm email content types'
+    confirm_email_from_address:
+      type: string
+      label: 'Confirmation email from address'
+    confirm_email_notify_subject:
+      type: string
+      label: 'Confirmation email subject'
+    confirm_email_notify_message:
+      type: string
+      label: 'Confirmation email message body'

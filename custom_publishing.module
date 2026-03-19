@@ -25,18 +25,34 @@ function custom_publishing_node_presave(EntityInterface $node) {
 function custom_publishing_node_insert(EntityInterface $node) {
   $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
   $account = \Drupal::currentUser();
+  $mailManager = \Drupal::service('plugin.manager.mail');
+  $lang = $node->langcode->value;
+  $params = [];
+  $params['node'] = $node;
+
+  // Send staff notification email.
   if ($config->get('notify') && $account->isAnonymous()) {
-    // Set the recipient address.
-    $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
     $site = \Drupal::service('config.factory')->get('system.site');
     $to = $config->get('notify_address') ? $config->get('notify_address') : $site->get('mail');
-    // Parameters.
-    $params = [];
-    $params['node'] = $node;
-    $lang = $node->langcode->value;
-    // Send the email.
-    $mailManager = \Drupal::service('plugin.manager.mail');
     $result = $mailManager->mail('custom_publishing', 'anonymous_node_insert', $to, $lang, $params, NULL, TRUE);
+  }
+
+  // Send user confirmation email.
+  if ($account->isAnonymous()) {
+    $confirm_types = $config->get('confirm_email_types');
+    $confirm_from = $config->get('confirm_email_from_address');
+    $confirm_subject = $config->get('confirm_email_notify_subject');
+    $confirm_message = $config->get('confirm_email_notify_message');
+
+    if ($confirm_types && $confirm_from && $confirm_subject && $confirm_message) {
+      $confirm_types_array = array_map('trim', explode(',', $confirm_types));
+      if (in_array($node->bundle(), $confirm_types_array)) {
+        if ($node->hasField('field_contact_email') && !$node->get('field_contact_email')->isEmpty()) {
+          $to = $node->get('field_contact_email')->value;
+          $result = $mailManager->mail('custom_publishing', 'user_confirmation', $to, $lang, $params, $confirm_from, TRUE);
+        }
+      }
+    }
   }
 }
 
@@ -44,26 +60,28 @@ function custom_publishing_node_insert(EntityInterface $node) {
  * Implements hook_mail().
  */
 function custom_publishing_mail($key, &$message, $params) {
-  // Only hook_mail for anonymous users inserting nodes.
+  $site = \Drupal::service('config.factory')->get('system.site');
+  $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
+  $node = $params['node'];
+
+  // Set up the fields.
+  $title = $node->getTitle();
+  $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path_alias.manager')->getAliasByPath('/node/' . $node->id());
+  $type = strtolower(node_get_type_label($node));
+  $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . date_default_timezone_get();
+  $sitename = $site->get('name');
+
+  // Token replacements.
+  $tokens = array(
+    '[[title]]' => $title,
+    '[[link]]' => $link,
+    '[[created]]' => $created,
+    '[[type]]' => $type,
+    '[[sitename]]' => $sitename,
+  );
+
+  // Staff notification email.
   if ($key === 'anonymous_node_insert') {
-    $site = \Drupal::service('config.factory')->get('system.site');
-    $config = \Drupal::service('config.factory')->get('custom_publishing.settings');
-    // Grab the node.
-    $node = $params['node'];
-    // Set up the fields.
-    $title = $node->getTitle();
-    $link = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::service('path_alias.manager')->getAliasByPath('/node/' . $node->id());
-    $type = strtolower(node_get_type_label($node));
-    $created = date('l, m/d/Y \a\t g:ia', $node->getCreatedTime()) . ' ' . date_default_timezone_get();
-    $sitename = $site->get('name');
-    // Token replacements.
-    $tokens = array(
-      '[[title]]' => $title,
-      '[[link]]' => $link,
-      '[[created]]' => $created,
-      '[[type]]' => $type,
-      '[[sitename]]' => $sitename,
-    );
     // Assign the subject.
     if ($subject = $config->get('notify_subject')) {
       $subject = strtr($subject, $tokens);
@@ -77,6 +95,20 @@ function custom_publishing_mail($key, &$message, $params) {
       $message['body'][] = $body;
     } else {
       $message['body'][] = "Greetings,\n\n" . 'New ' . $type . ' "' . $title . '" was submitted anonymously at ' . $sitename . ' on ' . $created . ".\n\n" . $link;
+    }
+  }
+
+  // User confirmation email.
+  if ($key === 'user_confirmation') {
+    // Assign the subject.
+    if ($subject = $config->get('confirm_email_notify_subject')) {
+      $subject = strtr($subject, $tokens);
+      $message['subject'] = $subject;
+    }
+    // Assign the body.
+    if ($body = $config->get('confirm_email_notify_message')) {
+      $body = strtr($body, $tokens);
+      $message['body'][] = $body;
     }
   }
 }
